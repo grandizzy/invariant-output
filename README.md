@@ -13,10 +13,16 @@ forge build
 
 ## Test commands
 
-Run all 3 invariant suites with the live progress spinner (≈10s):
+Run all invariant suites with the live progress spinner (≈10s):
 
 ```bash
 forge test --match-contract Invariants --show-progress
+```
+
+Run only the deliberately broken suite to see counterexample output:
+
+```bash
+forge test --match-contract BuggyBankInvariants -vv
 ```
 
 Single suite, longer run so the spinner ticks visibly:
@@ -58,6 +64,8 @@ Sample pulse line:
 | `src/Token.sol`   | Minimal ERC20-ish token |
 | `src/Vault.sol`   | 1:1 ERC4626-ish vault |
 | `src/Staking.sol` | Stake/unstake with points accrual |
-| `test/Token.invariants.t.sol`   | 3 invariants, 4-selector handler |
-| `test/Vault.invariants.t.sol`   | 4 invariants, deposit/withdraw flows |
-| `test/Staking.invariants.t.sol` | 3 invariants, stake/unstake/roll/claim |
+| `src/BuggyBank.sol` | **Has a deliberate accounting bug** (transfer doesn't debit the sender) |
+| `test/Token.invariants.t.sol`     | 3 invariants, 4-selector handler |
+| `test/Vault.invariants.t.sol`     | 4 invariants, deposit/withdraw flows |
+| `test/Staking.invariants.t.sol`   | 3 invariants, stake/unstake/roll/claim |
+| `test/BuggyBank.invariants.t.sol` | 1 invariant — **fails by design** to demo counterexample output |
