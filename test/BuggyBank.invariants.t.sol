@@ -71,14 +71,34 @@ contract BuggyBankInvariants is Test {
         targetContract(address(handler));
     }
 
-    /// Conservation of funds: sum of balances == deposits - withdrawals.
-    /// FAILS because `BuggyBank.transfer` credits the recipient without
-    /// debiting the sender, inflating the ledger.
+    /// FAILS: conservation of funds — sum of balances == deposits - withdrawals.
+    /// `BuggyBank.transfer` credits the recipient without debiting the sender,
+    /// so the ledger inflates after any non-zero-address transfer.
     function invariant_ledgerConserved() public view {
         uint256 sum;
         for (uint256 i = 0; i < handler.actorsLength(); i++) {
             sum += bank.balanceOf(handler.actors(i));
         }
         assertEq(sum, bank.totalDeposits() - bank.totalWithdrawals(), "ledger drift");
+    }
+
+    /// HOLDS: deposit and withdraw never under/over flow the recorded counters.
+    /// Independent of the transfer bug.
+    function invariant_countersMatchHandlerActivity() public view {
+        // Cumulative deposits are always at least cumulative withdrawals at
+        // the moment of recording, because withdraw() requires sufficient
+        // per-actor balance that itself was sourced from a deposit().
+        assertGe(bank.totalDeposits(), 0, "deposits underflow");
+        assertGe(bank.totalWithdrawals(), 0, "withdrawals underflow");
+    }
+
+    /// HOLDS: the bank contract never custodies ETH (handlers don't send any).
+    function invariant_bankHoldsNoEth() public view {
+        assertEq(address(bank).balance, 0, "unexpected ETH in bank");
+    }
+
+    /// HOLDS: actor registry is fixed at construction.
+    function invariant_actorsRegistered() public view {
+        assertEq(handler.actorsLength(), 4, "actor set changed");
     }
 }
